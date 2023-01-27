@@ -23,7 +23,7 @@ REGISTERS = {
     'INT_SOURCE':0X30,
     'DATA_FORMAT':0X31,
     'DATAX0':0X32,
-    'DATAX1':0X34,
+    'DATAX1':0X33,
     'DATAY0':0X34,
     'DATAY1':0X35,
     'DATAZ0':0X36,
@@ -36,6 +36,8 @@ class ADXL345:
 
 
     def __init__(self,address=0x53, url='ftdi:///1') -> None:
+
+        self.powerCtl = 1 << 2
         self.address = address
         self.url = url
         self.controller = i2c.I2cController()
@@ -60,7 +62,7 @@ class ADXL345:
         self.controller.configure(self.url)
     def _close(self):
         self.controller.terminate()
-    def read_from(self, regAddr, len):
+    def read_from(self, regAddr, len=1):
         self._open()
         data = self.i2c.read_from(regAddr,len)
         self._close()
@@ -89,6 +91,53 @@ class ADXL345:
             return int.from_bytes(devIdBytes, 'big')
         else:
             return None
+
+    def writePowerCtl(self, value):
+        self.write_to(REGISTERS['POWER_CTL'], [value], 1)
+    def readPowerCtl(self):
+        return self.read_from(REGISTERS['POWER_CTL'])
+
+    def wakeup(self, frequency=3):
+        assert(frequency >= 0 and frequency <= 3)
+        self.writePowerCtrl(frequency)
+    def enableMeasurement(self, enable):
+        #TODO: DONT CLEAR BITS
+        if enable:
+            self.writePowerCtl(1 << 3)
+        else:
+            self.writePowerCtl(0 << 3)
+    
+    def getXRaw(self):
+        
+
+        return int.from_bytes(self.read_from(REGISTERS['DATAX0'], 2),'big')
+    
+    def getYRaw(self):
+        return int.from_bytes(self.read_from(REGISTERS['DATAY0'], 2),'big')
+        
+        
+    
+
+    def getZRaw(self):
+        return int.from_bytes(self.read_from(REGISTERS['DATAZ0'], 2),'big')
+        
+        
+
+    def getXYZRaw(self):
+        data = self.read_from(REGISTERS['DATAX0'], 6)
+
+        print(data)
+        return {
+            'x' : int.from_bytes(data[:2], 'big'),
+            'y' : int.from_bytes(data[2:4], 'big'),
+            'z' : int.from_bytes(data[4:6], 'big'),
+        }
+        
+
+        
+
+        
+
 
     def isActive(self):
         return self.getDeviceId() == DEVICE_ID
