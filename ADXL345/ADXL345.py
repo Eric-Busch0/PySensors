@@ -111,25 +111,36 @@ class ADXL345:
         pctrl = self.readPowerCtl()
         pctrl &= ~(1 << bitNum)
         self.writePowerCtl(pctrl)
-        
+    def powerCtrlEnableBit(self, bitNum, enable):
+        assert(bitNum < 8)
 
+        if enable:
+            self.powerCtlSetBit(bitNum=bitNum)
+        else:
+            self.powerCtlClearBit(bitNum=bitNum)
+    def wakeup(self, frequency=3):
+        assert(frequency >= 0 and frequency <= 3)
+        self.writePowerCtrl(frequency)
     def enableSleep(self, enable):
         SLEEP_BIT=2
         if enable:
             self.powerCtlSetBit(SLEEP_BIT)
         else:
             self.powerCtlClearBit(SLEEP_BIT)
-
-    def wakeup(self, frequency=3):
-        assert(frequency >= 0 and frequency <= 3)
-        self.writePowerCtrl(frequency)
     def enableMeasurement(self, enable):
-        #TODO: DONT CLEAR BITS
         MEAS_BIT=3
-        if enable:
-            self.powerCtlSetBit(MEAS_BIT)
-        else:
-            self.powerCtlClearBit(MEAS_BIT)
+        self.powerCtrlEnableBit(MEAS_BIT, enable)
+
+    def enableAutoSleep(self, enable):
+        AUTO_SLEEP_BIT=4
+        self.powerCtrlEnableBit(AUTO_SLEEP_BIT, enable)
+    def enableLink(self, enable):
+        LINK_BIT=5
+        self.powerCtrlEnableBit(LINK_BIT,enable)
+
+
+
+    
     
     def getXRaw(self):
         

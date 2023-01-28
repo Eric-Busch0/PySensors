@@ -14,6 +14,9 @@ devId = adxl345.getDeviceId()
 
 print('Device ID', hex(devId))
 
+
+
+
 adxl345.enableMeasurement(True)
 xyz = adxl345.getXYZRaw()
 print(xyz)
