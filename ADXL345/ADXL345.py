@@ -34,7 +34,6 @@ REGISTERS = {
 DEVICE_ID=0x35
 class ADXL345:
 
-
     def __init__(self,address=0x53, url='ftdi:///1') -> None:
 
         self.powerCtl = 1 << 2
@@ -93,19 +92,44 @@ class ADXL345:
             return None
 
     def writePowerCtl(self, value):
+
         self.write_to(REGISTERS['POWER_CTL'], [value], 1)
+
     def readPowerCtl(self):
-        return self.read_from(REGISTERS['POWER_CTL'])
+        pctl_bytes = self.read_from(REGISTERS['POWER_CTL'])
+
+        return int.from_bytes(pctl_bytes, 'big')
+    def powerCtlSetBit(self, bitNum):
+        assert(bitNum < 8)
+
+        pctrl = self.readPowerCtl()
+        pctrl |= (1 << bitNum)
+        self.writePowerCtl(pctrl)
+
+    def powerCtlClearBit(self, bitNum):
+        assert(bitNum < 8)
+        pctrl = self.readPowerCtl()
+        pctrl &= ~(1 << bitNum)
+        self.writePowerCtl(pctrl)
+        
+
+    def enableSleep(self, enable):
+        SLEEP_BIT=2
+        if enable:
+            self.powerCtlSetBit(SLEEP_BIT)
+        else:
+            self.powerCtlClearBit(SLEEP_BIT)
 
     def wakeup(self, frequency=3):
         assert(frequency >= 0 and frequency <= 3)
         self.writePowerCtrl(frequency)
     def enableMeasurement(self, enable):
         #TODO: DONT CLEAR BITS
+        MEAS_BIT=3
         if enable:
-            self.writePowerCtl(1 << 3)
+            self.powerCtlSetBit(MEAS_BIT)
         else:
-            self.writePowerCtl(0 << 3)
+            self.powerCtlClearBit(MEAS_BIT)
     
     def getXRaw(self):
         
@@ -126,7 +150,6 @@ class ADXL345:
     def getXYZRaw(self):
         data = self.read_from(REGISTERS['DATAX0'], 6)
 
-        print(data)
         return {
             'x' : int.from_bytes(data[:2], 'big'),
             'y' : int.from_bytes(data[2:4], 'big'),
