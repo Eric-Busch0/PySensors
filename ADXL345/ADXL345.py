@@ -1,39 +1,40 @@
 from pyftdi import i2c
-REGISTERS = {
-    'DEVID' : 0x00,
-    'THRESH_TAP' : 0x1d,
-    'OFSX' :0x1e,
-    'OFSY':0X1F,
-    'OFSZ':0X20,
-    'DUR':0X21,
-    'LATENT':0X22,
-    'WINDOW':0X23,
-    'TRESH_ACT':0X24,
-    'THRESH_INACT':0X25,
-    'TIME_INACT':0X26,
-    'ACT_INACT_CTL':0X27,
-    'THRESH_FF':0X28,
-    'TIME_FF':0X29,
-    'TAP_AXES':0X2A,
-    'ACT_TAP_STATUS':0X2B,
-    'BW_RATE':0X2C,
-    'POWER_CTL':0X2D,
-    'INT_ENABLE':0X2E,
-    'INT_MAP':0X2F,
-    'INT_SOURCE':0X30,
-    'DATA_FORMAT':0X31,
-    'DATAX0':0X32,
-    'DATAX1':0X33,
-    'DATAY0':0X34,
-    'DATAY1':0X35,
-    'DATAZ0':0X36,
-    'DATAZ1':0X37,
-    'FIFO_CTL':0X38,
-    'FIFO_STATUS':0X39
-}
-DEVICE_ID=0x35
-class ADXL345:
 
+class Registers:
+    DEVID = 0x00
+    THRESH_TAP = 0x1d
+    OFSX =0x1e
+    OFSY=0X1F
+    OFSZ=0X20
+    DUR=0X21
+    LATENT=0X22
+    WINDOW=0X23
+    TRESH_ACT=0X24
+    THRESH_INACT=0X25
+    TIME_INACT=0X26
+    ACT_INACT_CTL=0X27
+    THRESH_FF=0X28
+    TIME_FF=0X29
+    TAP_AXES=0X2A
+    ACT_TAP_STATUS=0X2B
+    BW_RATE=0X2C
+    POWER_CTL=0X2D
+    INT_ENABLE=0X2E
+    INT_MAP=0X2F
+    INT_SOURCE=0X30
+    DATA_FORMAT=0X31
+    DATAX0=0X32
+    DATAX1=0X33
+    DATAY0=0X34
+    DATAY1=0X35
+    DATAZ0=0X36
+    DATAZ1=0X37
+    FIFO_CTL=0X38
+    FIFO_STATUS=0X39
+    
+
+class ADXL345:
+    DEVICE_ID=0x35
     def __init__(self,address=0x53, url='ftdi:///1') -> None:
 
         self.powerCtl = 1 << 2
@@ -82,7 +83,7 @@ class ADXL345:
         """
         
         self._open()
-        devIdBytes = self.read_from(REGISTERS['DEVID'], 1)
+        devIdBytes = self.read_from(Registers.DEVID, 1)
         self._close()
         
 
@@ -93,10 +94,10 @@ class ADXL345:
 
     def writePowerCtl(self, value):
 
-        self.write_to(REGISTERS['POWER_CTL'], [value], 1)
+        self.write_to(Registers.POWER_CTL, [value], 1)
 
     def readPowerCtl(self):
-        pctl_bytes = self.read_from(REGISTERS['POWER_CTL'])
+        pctl_bytes = self.read_from(Registers.POWER_CTL)
 
         return int.from_bytes(pctl_bytes, 'big')
     def powerCtlSetBit(self, bitNum):
@@ -142,27 +143,38 @@ class ADXL345:
 
     
     
-    def getXRaw(self):
-        
-
-        return int.from_bytes(self.read_from(REGISTERS['DATAX0'], 2),'big')
+    def getXRaw(self) -> int:
+        """
+        Get acceleration value in X direction 
+        """
+        return int.from_bytes(self.read_from(Registers.DATAX0, 2),'big')
     
-    def getYRaw(self):
-        return int.from_bytes(self.read_from(REGISTERS['DATAY0'], 2),'big')
+    def getYRaw(self) -> int:
+        """
+        Get acceleration value in Y direction 
+        """
+        return int.from_bytes(self.read_from(Registers.DATAY0, 2),'big')
+        
+    def getZRaw(self) -> int:
+        """
+        Get acceleration value in Z direction 
+        """
+        return int.from_bytes(self.read_from(Registers.DATAZ0, 2),'big')
         
         
-    
 
-    def getZRaw(self):
-        return int.from_bytes(self.read_from(REGISTERS['DATAZ0'], 2),'big')
-        
-        
-
-    def getXYZRaw(self):
-        data = self.read_from(REGISTERS['DATAX0'], 6)
+    def getXYZRaw(self) -> dict:
+        """
+        Get XYZ Accelration Values
+        Returns Dictionary
+        x: x value
+        y: y value
+        z: z value
+        """
+        data = self.read_from(Registers.DATAX0, 6)
 
         return {
-            'x' : int.from_bytes(data[:2], 'big'),
+            'x' : int.from_bytes(data[:2],  'big'),
             'y' : int.from_bytes(data[2:4], 'big'),
             'z' : int.from_bytes(data[4:6], 'big'),
         }
